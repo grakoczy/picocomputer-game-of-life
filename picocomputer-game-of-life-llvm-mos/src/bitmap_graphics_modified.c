@@ -30,6 +30,7 @@ static uint8_t  canvas_mode = 2;
 static uint16_t canvas_w = 320;
 static uint16_t canvas_h = 180;
 static uint8_t  bpp_mode = 3;
+static uint8_t  bpp = 4;
 
 // For drawing characters
 static uint16_t cursor_y = 0;
@@ -54,8 +55,6 @@ static uint8_t bbp_to_bpp_mode(uint8_t bpp)
     return 2; // default
 }
 
-// ---------------------------------------------------------------------------
-// ---------------------------------------------------------------------------
 void init_bitmap_graphics(uint16_t canvas_struct_address,
                           uint16_t canvas_data_address,
                           uint8_t  canvas_plane,
@@ -134,22 +133,6 @@ void init_bitmap_graphics(uint16_t canvas_struct_address,
         y_offset = 29; // (240 - 124)/4
     }
 
-    // initialize the canvas
-    xreg_vga_canvas(canvas_mode);
-
-    xram0_struct_set(canvas_struct, vga_mode3_config_t, x_wrap, false);
-    xram0_struct_set(canvas_struct, vga_mode3_config_t, y_wrap, false);
-    xram0_struct_set(canvas_struct, vga_mode3_config_t, x_pos_px, x_offset);
-    xram0_struct_set(canvas_struct, vga_mode3_config_t, y_pos_px, y_offset);
-    xram0_struct_set(canvas_struct, vga_mode3_config_t, width_px, canvas_w);
-    xram0_struct_set(canvas_struct, vga_mode3_config_t, height_px, canvas_h);
-    xram0_struct_set(canvas_struct, vga_mode3_config_t, xram_data_ptr, canvas_data);
-    xram0_struct_set(canvas_struct, vga_mode3_config_t, xram_palette_ptr, 0xFFFF);
-
-    // initialize the bitmap video modes
-    xreg_vga_mode(3, bpp_mode, canvas_struct, plane, scanline_begin, scanline_end); // bitmap mode
-
-    //xreg_vga_mode(0, 1); // console
     if (canvas_struct_address != canvas_struct) {
         printf("Asked for canvas_struct_address of 0x%04X, but got 0x%04X\n", canvas_struct_address, canvas_struct);
     }
@@ -168,6 +151,25 @@ void init_bitmap_graphics(uint16_t canvas_struct_address,
     if (bits_per_pixel != bpp_mode_to_bpp[bpp_mode]) {
         printf("Asked for bits_per_pixel of %u, but got %u\n", bits_per_pixel, bpp_mode_to_bpp[bpp_mode]);
     }
+
+    // initialize the canvas
+    //xreg_vga_canvas(canvas_mode);
+    xregn(1, 0, 0, 1, canvas_mode);
+
+    xram0_struct_set(canvas_struct, vga_mode3_config_t, x_wrap, false);
+    xram0_struct_set(canvas_struct, vga_mode3_config_t, y_wrap, false);
+    xram0_struct_set(canvas_struct, vga_mode3_config_t, x_pos_px, x_offset);
+    xram0_struct_set(canvas_struct, vga_mode3_config_t, y_pos_px, y_offset);
+    xram0_struct_set(canvas_struct, vga_mode3_config_t, width_px, canvas_w);
+    xram0_struct_set(canvas_struct, vga_mode3_config_t, height_px, canvas_h);
+    xram0_struct_set(canvas_struct, vga_mode3_config_t, xram_data_ptr, canvas_data);
+    xram0_struct_set(canvas_struct, vga_mode3_config_t, xram_palette_ptr, 0xFFFF);
+
+    // initialize the bitmap video modes
+    //xreg_vga_mode(3, bpp_mode, canvas_struct, plane); // bitmap mode
+    xregn(1, 0, 1, 4, 3, bpp_mode, canvas_struct, plane, scanline_begin, scanline_end);
+
+    //xreg_vga_mode(0, 1); // console
 }
 
 // ---------------------------------------------------------------------------
@@ -303,7 +305,7 @@ void draw_hline(uint16_t color, uint16_t x, uint16_t y, uint16_t w)
 // Draw a straight line from (x0,y0) to (x1,y1) with given color
 // using Bresenham's algorithm
 // ---------------------------------------------------------------------------
-void draw_line(uint16_t color, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
+void draw_line(uint16_t color, int16_t x0, int16_t y0, int16_t x1, int16_t y1)
 {
     int16_t dx, dy;
     int16_t err;

@@ -167,7 +167,7 @@ void init_bitmap_graphics(uint16_t canvas_struct_address,
 
     // initialize the bitmap video modes
     //xreg_vga_mode(3, bpp_mode, canvas_struct, plane); // bitmap mode
-    xregn(1, 0, 1, 4, 3, bpp_mode, canvas_struct, plane, scanline_begin, scanline_end);
+    xregn(1, 0, 1, 4, 3, bpp_mode, canvas_struct, plane);//, scanline_begin, scanline_end);
 
     //xreg_vga_mode(0, 1); // console
 }

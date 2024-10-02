@@ -18,7 +18,6 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "colors.h"
 
 #define swap(a, b) { int16_t t = a; a = b; b = t; }
 
@@ -47,7 +46,7 @@ void erase_canvas(void);
 void draw_pixel(uint16_t color, uint16_t x, uint16_t y);
 void draw_vline(uint16_t color, uint16_t x, uint16_t y, uint16_t h);
 void draw_hline(uint16_t color, uint16_t x, uint16_t y, uint16_t w);
-void draw_line(uint16_t color, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1);
+void draw_line(uint16_t color, int16_t x0, int16_t y0, int16_t x1, int16_t y1);
 void draw_rect(uint16_t color, uint16_t x, uint16_t y, uint16_t w, uint16_t h);
 void fill_rect(uint16_t color, uint16_t x, uint16_t y, uint16_t w, uint16_t h);
 void draw_circle(uint16_t color, uint16_t x0, uint16_t y0, uint16_t r);
