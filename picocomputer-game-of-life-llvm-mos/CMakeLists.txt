@@ -5,6 +5,9 @@ find_package(llvm-mos-sdk REQUIRED)
 project(MY-RP6502-PROJECT)
 add_executable(life)
 rp6502_executable(life)
+target_include_directories(life PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR}/src
+)
 target_sources(life PRIVATE
     src/colors.c
     src/bitmap_graphics.c

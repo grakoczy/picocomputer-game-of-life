@@ -11,7 +11,7 @@
 #include "bitmap_graphics.h"
 
 #define WIDTH 320
-#define HEIGHT 200
+#define HEIGHT 240
 
 
 char msg[80] = {0};
@@ -27,22 +27,22 @@ Refer to this diagram: http://www.jagregory.com/abrash-black-book/images/17-03.j
 */
 
 
-void CellMap(unsigned int w, unsigned int h);
-void SetCell(unsigned int x, unsigned int y);
-void ClearCell(unsigned int x, unsigned int y);
-int CellState(int x, int y); // WHY NOT UNSIGNED?
-void NextGen();
-void Init();
-unsigned char* cells;
-unsigned char* temp_cells;
-unsigned int width;
-unsigned int height;
-unsigned int length_in_bytes;
+// void CellMap(uint16_t w, uint16_t h);
+// void SetCell(uint16_t x, uint16_t y);
+// void ClearCell(uint16_t x, uint16_t y);
+// void NextGen();
+// void Init();
+// Global variables
+uint8_t* cells;
+uint8_t* temp_cells;
+uint16_t width;
+uint16_t height;
+uint16_t length_in_bytes;
 
 
 // Cell map dimensions
-unsigned int cellmap_width = 140;
-unsigned int cellmap_height = 140;
+uint16_t cellmap_width = 140;
+uint16_t cellmap_height = 140;
 
 // offset for drawing
 uint8_t x_offset = 90;
@@ -50,7 +50,7 @@ uint8_t y_offset = 30;
 
 
 // Generation counter
-unsigned int generation = 0;
+uint16_t generation = 0;
 
 
 // XRAM locations
@@ -71,26 +71,26 @@ bool handled_key = false;
 #define key(code) (keystates[code >> 3] & (1 << (code & 7)))
 
 
-void CellMap(unsigned int w, unsigned int h)
+void CellMap(uint16_t w, uint16_t h)
 {
     width = w;
     height = h;
     length_in_bytes = w * h;
 
     // Use malloc for dynamic memory allocation
-    cells = (unsigned char*)malloc(length_in_bytes);
-    temp_cells = (unsigned char*)malloc(length_in_bytes);
+    cells = (uint8_t*)malloc(length_in_bytes);
+    temp_cells = (uint8_t*)malloc(length_in_bytes);
 
     // Clear all cells to start
     memset(cells, 0, length_in_bytes);
 }
 
 
-void SetCell(unsigned int x, unsigned int y)
+void SetCell(uint16_t x, uint16_t y)
 {
-	int w = width, h = height;
-	int xoleft, xoright, yoabove, yobelow;
-	unsigned char *cell_ptr = cells + (y * w) + x;
+	uint16_t w = width, h = height;
+	int16_t xoleft, xoright, yoabove, yobelow;
+	uint8_t *cell_ptr = cells + (y * w) + x;
 
 	// Calculate the offsets to the eight neighboring cells,
 	// accounting for wrapping around at the edges of the cell map
@@ -115,11 +115,11 @@ void SetCell(unsigned int x, unsigned int y)
     draw_pixel(WHITE, x+x_offset, y+y_offset);
 }
 
-void ClearCell(unsigned int x, unsigned int y)
+void ClearCell(uint16_t x, uint16_t y)
 {
-	int w = width, h = height;
-	int xoleft, xoright, yoabove, yobelow;
-	unsigned char *cell_ptr = cells + (y * w) + x;
+	uint16_t w = width, h = height;
+	int16_t xoleft, xoright, yoabove, yobelow;
+	uint8_t *cell_ptr = cells + (y * w) + x;
 
 	// Calculate the offsets to the eight neighboring cells,
 	// accounting for wrapping around at the edges of the cell map
@@ -156,8 +156,8 @@ int CellState(int x, int y)
 
 void NextGen()
 {
-	unsigned int x, y, count;
-	unsigned int h, w;
+	uint16_t x, y, count;
+	uint16_t h, w;
 	unsigned char *cell_ptr;
 
     h = height;
@@ -211,20 +211,21 @@ void NextGen()
 
 static void setup()
 {
-	puts("\nSetup\n");
-    init_bitmap_graphics(0xFF00, 0x0000, 0, 1, 320, 240, 1, 0, HEIGHT);
+	// puts("\nSetup\n");
+    // init_bitmap_graphics(0xFF00, 0x0000, 0, 1, 320, 240, 1);//, 0, HEIGHT);
+	init_bitmap_graphics(0xFF00, 0x0000, 0, 1, 320, 240, 1);
     erase_canvas();
     // xregn(1, 0, 1, 0, 1, HEIGHT, 240);
 
     CellMap(cellmap_width, cellmap_height);
 
 
-    draw_hline(WHITE, x_offset, y_offset, cellmap_width+1);
-    draw_hline(WHITE, x_offset, y_offset+cellmap_height, cellmap_width+1);
-    draw_vline(WHITE, x_offset-1, y_offset, cellmap_height+1);
-    draw_vline(WHITE, x_offset+cellmap_width, y_offset, cellmap_height+1);
+    draw_hline(WHITE, x_offset, y_offset, cellmap_width);
+    draw_hline(WHITE, x_offset, y_offset+cellmap_height, cellmap_width);
+    draw_vline(WHITE, x_offset, y_offset, cellmap_height);
+    draw_vline(WHITE, x_offset+cellmap_width, y_offset, cellmap_height);
 
-	printf("x_offset: %u", x_offset);
+	
 
     // glider
 	// SetCell(11, 20);
@@ -235,6 +236,7 @@ static void setup()
 
 	// glider generator
 	// 4-8-12 diamond
+	// SetCell(68, 66);
 	SetCell(68, 66);
 	SetCell(69, 66);
 	SetCell(70, 66);
@@ -272,96 +274,99 @@ static void setup()
 	SetCell(70, 74);
 	SetCell(71, 74);
 
-	puts("setup finished\n");
+	// puts("\nsetup finished\n");
 }
 
-void main()
+int main()
 {
     char msg[80] = {0};
     uint8_t i;
 
-    puts("\n\n\n");
-    puts("Press SPACE to start, ESC to exit");
+    // puts("\n\n\n");
+    // puts("Press SPACE to start, ESC to exit");
 
     setup();
 
     // wait for a keypress
-    xregn( 0, 0, 0, 1, KEYBORD_INPUT);
-    RIA.addr0 = KEYBORD_INPUT;
-    RIA.step0 = 0;
-    while (1) {
+//     xregn( 0, 0, 0, 1, KEYBORD_INPUT);
+//     RIA.addr0 = KEYBORD_INPUT;
+//     RIA.step0 = 0;
+//     while (1) {
+		
 
-        // fill the keystates bitmask array
-        for (i = 0; i < KEYBOARD_BYTES; i++) {
-            uint8_t j, new_keys;
-            RIA.addr0 = KEYBORD_INPUT + i;
-            new_keys = RIA.rw0;
-///*
-            // check for change in any and all keys
-            for (j = 0; j < 8; j++) {
-                uint8_t new_key = (new_keys & (1<<j));
-                if ((((i<<3)+j)>3) && (new_key != (keystates[i] & (1<<j)))) {
-                    printf( "key %d %s\n", ((i<<3)+j), (new_key ? "pressed" : "released"));
-                }
-            }
-//*/
-            keystates[i] = new_keys;
-        }
+//         // fill the keystates bitmask array
+//         for (i = 0; i < KEYBOARD_BYTES; i++) {
+//             uint8_t j, new_keys;
+//             RIA.addr0 = KEYBORD_INPUT + i;
+//             new_keys = RIA.rw0;
+// ///*
+//             // check for change in any and all keys
+//             for (j = 0; j < 8; j++) {
+//                 uint8_t new_key = (new_keys & (1<<j));
+//                 // if ((((i<<3)+j)>3) && (new_key != (keystates[i] & (1<<j)))) {
+//                 //     printf( "key %d %s\n", ((i<<3)+j), (new_key ? "pressed" : "released"));
+//                 // }
+//             }
+// //*/
+//             keystates[i] = new_keys;
+//         }
 
-        // check for a key down
-        if (!(keystates[0] & 1)) {
-            if (!handled_key) { // handle only once per single keypress
-                // handle the keystrokes
-                if (key(KEY_SPC)) {
-                    break;
-                }
-                handled_key = true;
-            }
-        } else { // no keys down
-            handled_key = false;
-        }
-    }
+//         // check for a key down
+//         if (!(keystates[0] & 1)) {
+//             if (!handled_key) { // handle only once per single keypress
+//                 // handle the keystrokes
+//                 if (key(KEY_SPC)) {
+//                     break;
+//                 }
+//                 handled_key = true;
+//             }
+//         } else { // no keys down
+//             handled_key = false;
+//         }
+//     }
+	NextGen();
 
 
-    while (1) {
-        generation++;
-        sprintf(msg, "generation %u", generation);
-        puts(msg);
-        NextGen();
+//     while (1) {
+//         generation++;
+//         sprintf(msg, "generation %u", generation);
+//         puts(msg);
+//         NextGen();
 
-        xregn( 0, 0, 0, 1, KEYBORD_INPUT);
-        RIA.addr0 = KEYBORD_INPUT;
-        RIA.step0 = 0;
+//         xregn( 0, 0, 0, 1, KEYBORD_INPUT);
+//         RIA.addr0 = KEYBORD_INPUT;
+//         RIA.step0 = 0;
         
 
-        // fill the keystates bitmask array
-        for (i = 0; i < KEYBOARD_BYTES; i++) {
-            uint8_t j, new_keys;
-            RIA.addr0 = KEYBORD_INPUT + i;
-            new_keys = RIA.rw0;
-///*
-            // check for change in any and all keys
-            for (j = 0; j < 8; j++) {
-                uint8_t new_key = (new_keys & (1<<j));
-                // if ((((i<<3)+j)>3) && (new_key != (keystates[i] & (1<<j)))) {
-                //     printf( "key %d %s\n", ((i<<3)+j), (new_key ? "pressed" : "released"));
-                // }
-            }
-//*/
-            keystates[i] = new_keys;
-        }
+//         // fill the keystates bitmask array
+//         for (i = 0; i < KEYBOARD_BYTES; i++) {
+//             uint8_t j, new_keys;
+//             RIA.addr0 = KEYBORD_INPUT + i;
+//             new_keys = RIA.rw0;
+// ///*
+//             // check for change in any and all keys
+//             for (j = 0; j < 8; j++) {
+//                 uint8_t new_key = (new_keys & (1<<j));
+//                 // if ((((i<<3)+j)>3) && (new_key != (keystates[i] & (1<<j)))) {
+//                 //     printf( "key %d %s\n", ((i<<3)+j), (new_key ? "pressed" : "released"));
+//                 // }
+//             }
+// //*/
+//             keystates[i] = new_keys;
+//         }
 
-        if (!(keystates[0] & 1)) {
-            if (!handled_key) { // handle only once per single keypress
-                // handle the keystrokes
-                if (key(KEY_ESC)) {
-                    break;
-                }
-                handled_key = true;
-            }
-        } else { // no keys down
-            handled_key = false;
-        }
-    };
+//         if (!(keystates[0] & 1)) {
+//             if (!handled_key) { // handle only once per single keypress
+//                 // handle the keystrokes
+//                 if (key(KEY_ESC)) {
+//                     break;
+//                 }
+//                 handled_key = true;
+//             }
+//         } else { // no keys down
+//             handled_key = false;
+//         }
+//     };
+	return 0;
     
 }

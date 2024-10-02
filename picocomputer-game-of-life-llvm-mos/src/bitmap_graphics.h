@@ -33,9 +33,7 @@ void init_bitmap_graphics(uint16_t canvas_struct_address,
                           uint8_t  canvas_type,
                           uint16_t canvas_width,
                           uint16_t canvas_height,
-                          uint8_t  bits_per_pixel,
-                          uint8_t  scanline_begin,
-                          uint8_t  scanline_end);
+                          uint8_t  bits_per_pixel);
 uint16_t canvas_width(void);
 uint16_t canvas_height(void);
 uint8_t bits_per_pixel(void);
