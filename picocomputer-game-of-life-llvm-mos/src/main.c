@@ -27,22 +27,22 @@ Refer to this diagram: http://www.jagregory.com/abrash-black-book/images/17-03.j
 */
 
 
-void CellMap(unsigned int w, unsigned int h);
-void SetCell(unsigned int x, unsigned int y);
-void ClearCell(unsigned int x, unsigned int y);
-int CellState(int x, int y); // WHY NOT UNSIGNED?
+void CellMap(uint8_t w, uint8_t h);
+void SetCell(uint8_t x, uint8_t y);
+void ClearCell(uint8_t x, uint8_t y);
+int8_t CellState(int8_t x, int8_t y); // WHY NOT UNSIGNED?
 void NextGen();
 void Init();
 unsigned char* cells;
 unsigned char* temp_cells;
-unsigned int width;
-unsigned int height;
-unsigned int length_in_bytes;
+uint8_t width;
+uint8_t height;
+uint8_t length_in_bytes;
 
 
 // Cell map dimensions
-unsigned int cellmap_width = 140;
-unsigned int cellmap_height = 140;
+uint8_t cellmap_width = 140;
+uint8_t cellmap_height = 140;
 
 // offset for drawing
 uint8_t x_offset = 90;
@@ -50,7 +50,7 @@ uint8_t y_offset = 30;
 
 
 // Generation counter
-unsigned int generation = 0;
+uint8_t generation = 0;
 
 
 // XRAM locations
@@ -71,7 +71,7 @@ bool handled_key = false;
 #define key(code) (keystates[code >> 3] & (1 << (code & 7)))
 
 
-void CellMap(unsigned int w, unsigned int h)
+void CellMap(uint8_t w, uint8_t h)
 {
     width = w;
     height = h;
@@ -86,10 +86,10 @@ void CellMap(unsigned int w, unsigned int h)
 }
 
 
-void SetCell(unsigned int x, unsigned int y)
+void SetCell(uint8_t x, uint8_t y)
 {
-	int w = width, h = height;
-	int xoleft, xoright, yoabove, yobelow;
+	uint8_t w = width, h = height;
+	int8_t xoleft, xoright, yoabove, yobelow;
 	unsigned char *cell_ptr = cells + (y * w) + x;
 
 	// Calculate the offsets to the eight neighboring cells,
@@ -115,10 +115,10 @@ void SetCell(unsigned int x, unsigned int y)
     draw_pixel(WHITE, x+x_offset, y+y_offset);
 }
 
-void ClearCell(unsigned int x, unsigned int y)
+void ClearCell(uint8_t x, uint8_t y)
 {
-	int w = width, h = height;
-	int xoleft, xoright, yoabove, yobelow;
+	int8_t w = width, h = height;
+	int8_t xoleft, xoright, yoabove, yobelow;
 	unsigned char *cell_ptr = cells + (y * w) + x;
 
 	// Calculate the offsets to the eight neighboring cells,
@@ -145,7 +145,7 @@ void ClearCell(unsigned int x, unsigned int y)
     draw_pixel(BLACK, x+x_offset, y+y_offset);
 }
 
-int CellState(int x, int y)
+int8_t CellState(int8_t x, int8_t y)
 {
 	unsigned char *cell_ptr =
 		cells + (y * width) + x;
@@ -156,8 +156,8 @@ int CellState(int x, int y)
 
 void NextGen()
 {
-	unsigned int x, y, count;
-	unsigned int h, w;
+	uint8_t x, y, count;
+	uint8_t h, w;
 	unsigned char *cell_ptr;
 
     h = height;
@@ -358,5 +358,7 @@ int main()
             handled_key = false;
         }
     };
+
+	return 0;
     
 }
