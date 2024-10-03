@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <inttypes.h>
 #include <string.h>  // for memset
 #include "colors.h"
 #include "bitmap_graphics.h"
@@ -27,24 +28,26 @@ Refer to this diagram: http://www.jagregory.com/abrash-black-book/images/17-03.j
 */
 
 
-uint8_t* cells;
-uint8_t* temp_cells;
-uint16_t width;
-uint16_t height;
-uint16_t length_in_bytes;
-
 
 // Cell map dimensions
-uint16_t cellmap_width = 140;
-uint16_t cellmap_height = 140;
+#define cellmap_width  128
+#define cellmap_height  128
+const uint16_t width = cellmap_width;
+const uint16_t height = cellmap_height;
+const uint16_t length_in_bytes = cellmap_width * cellmap_height;
+
+uint8_t cells[length_in_bytes];
+uint8_t temp_cells[length_in_bytes];
+
+
 
 // offset for drawing
-uint8_t x_offset = 90;
-uint8_t y_offset = 30;
+uint16_t x_offset = 90;
+uint16_t y_offset = 30;
+
+uint16_t x_center, y_center;
 
 
-// Generation counter
-uint16_t generation = 0;
 
 
 // XRAM locations
@@ -65,22 +68,25 @@ bool handled_key = false;
 #define key(code) (keystates[code >> 3] & (1 << (code & 7)))
 
 
-void CellMap(uint16_t w, uint16_t h)
+static void CellMap()
 {
-    width = w;
-    height = h;
-    length_in_bytes = w * h;
+    // width = w;
+    // height = h;
+    // length_in_bytes = w * h;
 
     // Use malloc for dynamic memory allocation
-    cells = (uint8_t*)malloc(length_in_bytes);
-    temp_cells = (uint8_t*)malloc(length_in_bytes);
+    // cells = (uint8_t*)malloc(length_in_bytes)
+	// cells = (uint8_t*)malloc(length_in_bytes * sizeof(uint8_t));   // cell storage
+	// temp_cells = (uint8_t*)malloc(length_in_bytes * sizeof(uint8_t)); // temp cell storage
+
 
     // Clear all cells to start
     memset(cells, 0, length_in_bytes);
+
 }
 
 
-void SetCell(uint16_t x, uint16_t y)
+static void SetCell(uint16_t x, uint16_t y)
 {
 	int16_t w = width, h = height;
 	int16_t xoleft, xoright, yoabove, yobelow;
@@ -109,7 +115,7 @@ void SetCell(uint16_t x, uint16_t y)
     draw_pixel(WHITE, x+x_offset, y+y_offset);
 }
 
-void ClearCell(uint16_t x, uint16_t y)
+static void ClearCell(uint16_t x, uint16_t y)
 {
 	int16_t w = width, h = height;
 	int16_t xoleft, xoright, yoabove, yobelow;
@@ -139,7 +145,7 @@ void ClearCell(uint16_t x, uint16_t y)
     draw_pixel(BLACK, x+x_offset, y+y_offset);
 }
 
-int16_t CellState(int16_t x, int16_t y)
+static int16_t CellState(int16_t x, int16_t y)
 {
 	uint8_t *cell_ptr =
 		cells + (y * width) + x;
@@ -148,7 +154,7 @@ int16_t CellState(int16_t x, int16_t y)
 	return *cell_ptr & 0x01;
 }
 
-void NextGen()
+static void NextGen()
 {
 	uint16_t x, y, count;
 	uint16_t h, w;
@@ -207,12 +213,17 @@ static void setup()
 {
     init_bitmap_graphics(0xFF00, 0x0000, 0, 1, 320, 240, 1);//, 0, HEIGHT);
     erase_canvas();
-    // xregn(1, 0, 1, 0, 1, HEIGHT, 240);
 
-    CellMap(cellmap_width, cellmap_height);
+	x_center = cellmap_width / 2 - 1;
+	y_center = cellmap_height /2 - 1;
+
+	printf("xc: %i, yc: %i", x_center, y_center);
+    xregn(1, 0, 1, 0, 1, HEIGHT, 240);
+
+    CellMap();
 
 
-    draw_hline(WHITE, x_offset, y_offset, cellmap_width+1);
+    draw_hline(WHITE, x_offset-1, y_offset-1, cellmap_width+2);
     draw_hline(WHITE, x_offset, y_offset+cellmap_height, cellmap_width+1);
     draw_vline(WHITE, x_offset-1, y_offset, cellmap_height+1);
     draw_vline(WHITE, x_offset+cellmap_width, y_offset, cellmap_height+1);
@@ -226,53 +237,65 @@ static void setup()
 
 	// glider generator
 	// 4-8-12 diamond
-	SetCell(68, 66);
-	SetCell(69, 66);
-	SetCell(70, 66);
-	SetCell(71, 66);
-	SetCell(66, 68);
-	SetCell(67, 68);
-	SetCell(68, 68);
-	SetCell(69, 68);
-	SetCell(70, 68);
-	SetCell(71, 68);
-	SetCell(72, 68);
-	SetCell(73, 68);
-	SetCell(64, 70);
-	SetCell(65, 70);
-	SetCell(66, 70);
-	SetCell(67, 70);
-	SetCell(68, 70);
-	SetCell(69, 70);
-	SetCell(70, 70);
-	SetCell(71, 70);
-	SetCell(72, 70);
-	SetCell(73, 70);
-	SetCell(74, 70);
-	SetCell(75, 70);
-	SetCell(66, 72);
-	SetCell(67, 72);
-	SetCell(68, 72);
-	SetCell(69, 72);
-	SetCell(70, 72);
-	SetCell(71, 72);
-	SetCell(72, 72);
-	SetCell(73, 72);
-	SetCell(68, 74);
-	SetCell(69, 74);
-	SetCell(70, 74);
-	SetCell(71, 74);
+	SetCell(x_center-1, y_center - 4);
+	SetCell(x_center, y_center - 4);
+	SetCell(x_center+1, y_center - 4);
+	SetCell(x_center+2, y_center - 4);
+
+	SetCell(x_center-3, y_center - 2);
+	SetCell(x_center-2, y_center - 2);
+	SetCell(x_center-1, y_center - 2);
+	SetCell(x_center, y_center - 2);
+	SetCell(x_center+1, y_center - 2);
+	SetCell(x_center+2, y_center - 2);
+	SetCell(x_center+3, y_center - 2);
+	SetCell(x_center+4, y_center - 2);
+
+
+	SetCell(x_center-5, y_center);
+	SetCell(x_center-4, y_center);
+	SetCell(x_center-3, y_center);
+	SetCell(x_center-2, y_center);
+	SetCell(x_center-1, y_center);
+	SetCell(x_center, y_center);
+	SetCell(x_center+1, y_center);
+	SetCell(x_center+2, y_center);
+	SetCell(x_center+3, y_center);
+	SetCell(x_center+4, y_center);
+	SetCell(x_center+5, y_center);
+	SetCell(x_center+6, y_center);
+
+
+	SetCell(x_center-3, y_center + 2);
+	SetCell(x_center-2, y_center + 2);
+	SetCell(x_center-1, y_center + 2);
+	SetCell(x_center, y_center + 2);
+	SetCell(x_center+1, y_center + 2);
+	SetCell(x_center+2, y_center + 2);
+	SetCell(x_center+3, y_center + 2);
+	SetCell(x_center+4, y_center + 2);
+
+	SetCell(x_center-1, y_center + 4);
+	SetCell(x_center, y_center + 4);
+	SetCell(x_center+1, y_center + 4);
+	SetCell(x_center+2, y_center + 4);
+	
 }
 
 int16_t main()
 {
     char msg[80] = {0};
-    uint8_t i;
+	uint8_t i;
+	// Generation counter
+	uint16_t generation = 0;
+
 
     puts("\n\n\n");
     puts("Press SPACE to start, ESC to exit");
 
     setup();
+
+	puts("starting...");
 
     // wait for a keypress
     xregn( 0, 0, 0, 1, KEYBOARD_INPUT);
@@ -289,9 +312,9 @@ int16_t main()
             // check for change in any and all keys
             for (j = 0; j < 8; j++) {
                 uint8_t new_key = (new_keys & (1<<j));
-                // if ((((i<<3)+j)>3) && (new_key != (keystates[i] & (1<<j)))) {
-                    // printf( "key %d %s\n", ((i<<3)+j), (new_key ? "pressed" : "released"));
-                // }
+                if ((((i<<3)+j)>3) && (new_key != (keystates[i] & (1<<j)))) {
+                    printf( "key %d %s\n", ((i<<3)+j), (new_key ? "pressed" : "released"));
+                }
             }
 //*/
             keystates[i] = new_keys;
@@ -313,9 +336,9 @@ int16_t main()
 
 
     while (1) {
+
         generation++;
-        sprintf(msg, "generation %u", generation);
-        puts(msg);
+        printf("\ngeneration %i", generation);
         NextGen();
 
         xregn( 0, 0, 0, 1, KEYBOARD_INPUT);
@@ -328,7 +351,7 @@ int16_t main()
             uint8_t j, new_keys;
             RIA.addr0 = KEYBOARD_INPUT + i;
             new_keys = RIA.rw0;
-///*
+
             // check for change in any and all keys
             for (j = 0; j < 8; j++) {
                 uint8_t new_key = (new_keys & (1<<j));
@@ -336,7 +359,7 @@ int16_t main()
                 //     printf( "key %d %s\n", ((i<<3)+j), (new_key ? "pressed" : "released"));
                 // }
             }
-//*/
+
             keystates[i] = new_keys;
         }
 
