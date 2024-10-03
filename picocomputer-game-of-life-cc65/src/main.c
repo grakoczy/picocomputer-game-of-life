@@ -41,12 +41,14 @@ unsigned int length_in_bytes;
 
 
 // Cell map dimensions
-unsigned int cellmap_width = 140;
-unsigned int cellmap_height = 140;
+unsigned int cellmap_width = 128;
+unsigned int cellmap_height = 128;
 
 // offset for drawing
 uint8_t x_offset = 90;
 uint8_t y_offset = 30;
+
+uint16_t x_center, y_center;
 
 
 // Generation counter
@@ -215,6 +217,9 @@ static void setup()
     erase_canvas();
     xreg(1, 0, 1, 0, 1, HEIGHT, 240);
 
+	x_center = cellmap_width / 2 - 1;
+	y_center = cellmap_height /2 - 1;
+
     CellMap(cellmap_width, cellmap_height);
 
 
@@ -232,42 +237,50 @@ static void setup()
 
 	// glider generator
 	// 4-8-12 diamond
-	SetCell(68, 66);
-	SetCell(69, 66);
-	SetCell(70, 66);
-	SetCell(71, 66);
-	SetCell(66, 68);
-	SetCell(67, 68);
-	SetCell(68, 68);
-	SetCell(69, 68);
-	SetCell(70, 68);
-	SetCell(71, 68);
-	SetCell(72, 68);
-	SetCell(73, 68);
-	SetCell(64, 70);
-	SetCell(65, 70);
-	SetCell(66, 70);
-	SetCell(67, 70);
-	SetCell(68, 70);
-	SetCell(69, 70);
-	SetCell(70, 70);
-	SetCell(71, 70);
-	SetCell(72, 70);
-	SetCell(73, 70);
-	SetCell(74, 70);
-	SetCell(75, 70);
-	SetCell(66, 72);
-	SetCell(67, 72);
-	SetCell(68, 72);
-	SetCell(69, 72);
-	SetCell(70, 72);
-	SetCell(71, 72);
-	SetCell(72, 72);
-	SetCell(73, 72);
-	SetCell(68, 74);
-	SetCell(69, 74);
-	SetCell(70, 74);
-	SetCell(71, 74);
+
+	SetCell(x_center-1, y_center - 4);
+	SetCell(x_center, y_center - 4);
+	SetCell(x_center+1, y_center - 4);
+	SetCell(x_center+2, y_center - 4);
+
+	SetCell(x_center-3, y_center - 2);
+	SetCell(x_center-2, y_center - 2);
+	SetCell(x_center-1, y_center - 2);
+	SetCell(x_center, y_center - 2);
+	SetCell(x_center+1, y_center - 2);
+	SetCell(x_center+2, y_center - 2);
+	SetCell(x_center+3, y_center - 2);
+	SetCell(x_center+4, y_center - 2);
+
+
+	SetCell(x_center-5, y_center);
+	SetCell(x_center-4, y_center);
+	SetCell(x_center-3, y_center);
+	SetCell(x_center-2, y_center);
+	SetCell(x_center-1, y_center);
+	SetCell(x_center, y_center);
+	SetCell(x_center+1, y_center);
+	SetCell(x_center+2, y_center);
+	SetCell(x_center+3, y_center);
+	SetCell(x_center+4, y_center);
+	SetCell(x_center+5, y_center);
+	SetCell(x_center+6, y_center);
+
+
+	SetCell(x_center-3, y_center + 2);
+	SetCell(x_center-2, y_center + 2);
+	SetCell(x_center-1, y_center + 2);
+	SetCell(x_center, y_center + 2);
+	SetCell(x_center+1, y_center + 2);
+	SetCell(x_center+2, y_center + 2);
+	SetCell(x_center+3, y_center + 2);
+	SetCell(x_center+4, y_center + 2);
+
+	SetCell(x_center-1, y_center + 4);
+	SetCell(x_center, y_center + 4);
+	SetCell(x_center+1, y_center + 4);
+	SetCell(x_center+2, y_center + 4);
+
 }
 
 void main()
