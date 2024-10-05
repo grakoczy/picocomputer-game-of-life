@@ -291,11 +291,14 @@ int16_t main()
 
 
     puts("\n\n\n");
-    puts("Press SPACE to start, ESC to exit");
+	
 
     setup();
 
 	puts("starting...");
+
+	set_cursor(10, 220);
+    draw_string("Press SPACE to start, ESC to exit");
 
     // wait for a keypress
     xregn( 0, 0, 0, 1, KEYBOARD_INPUT);
@@ -339,7 +342,16 @@ int16_t main()
 
         generation++;
         printf("\ngeneration %i", generation);
+
+		sprintf(msg, "gen: %i", generation);
+		fill_rect(BLACK, 5, 20, 10*6, 8);
+		set_text_color(WHITE);
+		set_cursor(5, 20);
+		draw_string(msg);
+
         NextGen();
+
+		
 
         xregn( 0, 0, 0, 1, KEYBOARD_INPUT);
         RIA.addr0 = KEYBOARD_INPUT;
