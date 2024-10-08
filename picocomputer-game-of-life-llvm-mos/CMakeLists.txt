@@ -11,5 +11,7 @@ target_include_directories(life PRIVATE
 target_sources(life PRIVATE
     src/colors.c
     src/bitmap_graphics.c
+    src/mouse.c
+    src/cellmap.c
     src/main.c
 )
