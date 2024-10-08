@@ -20,6 +20,8 @@ static uint16_t mouse_X = 0;
 static uint16_t mouse_Y = 0;
 static bool left_button_pressed = false;
 
+extern uint8_t shape_selected;
+
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
 static void DrawMousePointer(void)
@@ -27,12 +29,12 @@ static void DrawMousePointer(void)
     int i;
     static const uint8_t data[100] = {
         16, 16, 16, 16, 16, 16, 16,  0,  0,  0,
-        16,255,255,255,255,255, 16,  0,  0,  0,
-        16,255,255,255,255, 16,  0,  0,  0,  0,
-        16,255,255,255,255, 16,  0,  0,  0,  0,
-        16,255,255,255,255,255, 16,  0,  0,  0,
-        16,255, 16, 16,255,255,255,  0,  0,  0,
-        16, 16,  0,  0, 16,255,255,  0,  0,  0,
+        16,70,70,70,70,70, 16,  0,  0,  0,
+        16,70,70,70,70, 16,  0,  0,  0,  0,
+        16,70,70,70,70, 16,  0,  0,  0,  0,
+        16,70,70,70,70,70, 16,  0,  0,  0,
+        16,70, 16, 16,70,70,70,  0,  0,  0,
+        16, 16,  0,  0, 16,70,70,  0,  0,  0,
          0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
          0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
          0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
@@ -68,10 +70,21 @@ static bool LeftBtnPressed(int16_t x, int16_t y)
     bool retval = false;
     uint8_t cell_x, cell_y = 0;
 
+
     if(x >= x_offset && y >= y_offset ){
         cell_x = (x - x_offset) / 3;
         cell_y = (y - y_offset) / 3;
-        SetCell(cell_x, cell_y);        
+        if (shape_selected == 0) {
+            SetCell(cell_x, cell_y);
+        } else if (shape_selected == 1)
+        {
+            DrawShape(shapes[0], cell_x, cell_y);
+        } else if (shape_selected == 2)
+        {
+            DrawShape(shapes[1], cell_x, cell_y);
+        }
+        
+        
     }
 
     return retval;
@@ -230,11 +243,9 @@ bool HandleMouse(void)
     if (!first_time) {
         // handle button changes
         if (pressed & 1) {
-            printf("pressed: %i\n", pressed);
             LeftBtnPressed(x, y);
         }
         if (released & 1) {
-            printf("released: %i\n", released);
             LeftBtnReleased(x, y);
         }
         if (pressed & 2) {

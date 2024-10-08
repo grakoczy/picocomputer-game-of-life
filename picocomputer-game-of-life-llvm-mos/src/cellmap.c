@@ -25,8 +25,56 @@ uint16_t y_offset = 48;
 
 uint16_t x_center, y_center;
 
-uint8_t cells[length_in_bytes];
-uint8_t temp_cells[length_in_bytes];
+uint8_t cells[cellmap_width * cellmap_height];
+uint8_t temp_cells[cellmap_width * cellmap_height];
+
+
+uint8_t shapes[2][16] = 
+    {  {0, 1, 0, 0, //glider
+        0, 0, 1, 0,
+        1, 1, 1, 0,
+        0, 0, 0, 0},
+    
+        {1, 0, 1, 1, //B-heptomino
+         1, 1, 1, 0,
+         0, 1, 0, 0,
+         0, 0, 0, 0}
+    };
+
+
+void DrawShape(uint8_t shape[16], int startX, int startY)
+{
+    // Iterate through the 16 elements (4x4 grid)
+    for (int i = 0; i < 4; ++i) // Loop over rows
+    {
+        for (int j = 0; j < 4; ++j) // Loop over columns
+        {
+            // Check if the cell should be drawn (1 means filled)
+            if (shape[i * 4 + j] == 1)
+            {
+                // Draw at position (startX + j, startY + i)
+                SetCell(startX + j, startY + i);
+            }
+        }
+    }
+}
+
+void DrawMenuShape(uint8_t shape[16], int startX, int startY)
+{
+    // Iterate through the 16 elements (4x4 grid)
+    for (int i = 0; i < 4; ++i) // Loop over rows
+    {
+        for (int j = 0; j < 4; ++j) // Loop over columns
+        {
+            // Check if the cell should be drawn (1 means filled)
+            if (shape[i * 4 + j] == 1)
+            {
+                // Draw at position (startX + j, startY + i)
+                DrawCell(WHITE, startX + j, startY + i, 2, 0, 0);
+            }
+        }
+    }
+}
 
 // CELL STRUCTURE
 /* 
@@ -36,7 +84,7 @@ of neighbours (up to 8). The 5th to 7th bits are unused.
 Refer to this diagram: http://www.jagregory.com/abrash-black-book/images/17-03.jpg
 */
 
-void DrawCell(uint16_t color, uint16_t x, uint16_t y, uint8_t mode) {
+void DrawCell(uint16_t color, uint16_t x, uint16_t y, uint8_t mode, uint16_t x_offset, uint16_t y_offset) {
 	int16_t startX = x * 3 + x_offset;
 	int16_t startY = y * 3 + y_offset;
 
@@ -63,16 +111,6 @@ void DrawCell(uint16_t color, uint16_t x, uint16_t y, uint8_t mode) {
 
 void CellMap()
 {
-    // width = w;
-    // height = h;
-    // length_in_bytes = w * h;
-
-    // Use malloc for dynamic memory allocation
-    // cells = (uint8_t*)malloc(length_in_bytes)
-	// cells = (uint8_t*)malloc(length_in_bytes * sizeof(uint8_t));   // cell storage
-	// temp_cells = (uint8_t*)malloc(length_in_bytes * sizeof(uint8_t)); // temp cell storage
-
-
     // Clear all cells to start
     memset(cells, 0, length_in_bytes);
 
@@ -117,7 +155,7 @@ void SetCell(uint16_t x, uint16_t y)
 
     // setPixel(x+x_offset, y+y_offset, true);
     // draw_pixel(WHITE, x+x_offset, y+y_offset);
-	DrawCell(WHITE, x, y, mode);
+	DrawCell(WHITE, x, y, mode, x_offset, y_offset);
 }
 
 void ClearCell(uint16_t x, uint16_t y)
@@ -148,7 +186,7 @@ void ClearCell(uint16_t x, uint16_t y)
 
     // setPixel(x+x_offset, y+y_offset, false);
     // draw_pixel(BLACK, x+x_offset, y+y_offset);
-	DrawCell(BLACK, x, y, mode);
+	DrawCell(BLACK, x, y, mode, x_offset, y_offset);
 }
 
 int16_t CellState(int16_t x, int16_t y)

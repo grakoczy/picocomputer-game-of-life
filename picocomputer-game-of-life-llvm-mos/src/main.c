@@ -18,7 +18,7 @@
 char msg[80] = {0};
 
 
-bool paused = false;
+bool paused = true;
 
 
 // XRAM locations
@@ -30,6 +30,9 @@ bool paused = false;
 uint8_t keystates[KEYBOARD_BYTES] = {0};
 bool handled_key = false;
 
+uint16_t shapes_coords[2][2] = {{5, 20}, {5, 30}};
+uint8_t shape_selected = 0;
+
 // keystates[code>>3] gets contents from correct byte in array
 // 1 << (code&7) moves a 1 into proper position to mask with byte contents
 // final & gives 1 if key is pressed, 0 if not
@@ -38,6 +41,23 @@ bool handled_key = false;
 
 
 
+// void DrawShape(uint16_t color, uint16_t x, uint16_t y, uint8_t shape_number) {
+
+
+// 	printf("%i, %i, %i, %i \n", shapes[shape_number][4], shapes[shape_number][5], shapes[shape_number][6], shapes[shape_number][7]);
+// 	for (uint8_t i = 0; i < 4; i++) {
+// 		for (uint8_t j = 0; j < 4; j++) {
+// 			uint8_t on = shapes[shape_number][i+j];
+// 			// printf("i: %i, j: %i, on: %i", i, j, on);
+// 			printf(" %i ", on);
+// 			if (on == 1) {
+// 				SetCell(x+j, y+x);
+// 			}
+			
+// 		}
+// 		printf("\n");
+// 	}
+// }
 
 
 
@@ -62,7 +82,41 @@ static void setup()
     draw_vline(WHITE, x_offset-1, y_offset, cellmap_height*3+1);
     draw_vline(WHITE, x_offset+cellmap_width*3, y_offset, cellmap_height*3+1);
 
-    // glider
+    set_cursor(16, 20);
+	draw_string("gen: 0");
+
+	DrawMenuShape(shapes[0], shapes_coords[0][0], shapes_coords[0][1]);
+	set_cursor(30, 60);
+	draw_string(" glider (press 1)");
+	DrawMenuShape(shapes[1], shapes_coords[1][0], shapes_coords[1][1]);
+	set_cursor(30, 90);
+	draw_string(" B-heptomino (press 2)");
+
+	set_cursor(16, 120);
+	draw_string("free drawing press 0");
+
+	set_cursor(16, 140);
+	sprintf(msg, "shape selected: %i", shape_selected);
+	draw_string(msg);
+
+
+	set_cursor(10, 400);
+    draw_string("LMB set cell");
+
+	set_cursor(10, 410);
+    draw_string("RMB clear cell");
+
+	set_cursor(10, 420);
+    draw_string("SPACE to start/pause");
+
+	set_cursor(10, 430);
+    draw_string("C to clear map");
+
+	set_cursor(10, 440);
+    draw_string("ESC to exit");
+
+	// DrawShape(shapes[0], 5, 10);
+	// DrawShape(shapes[1], 25, 80);
 
 	// SetCell(11, 20);
 	// SetCell(12, 21);
@@ -134,68 +188,10 @@ int16_t main()
 
 	puts("\nstarting...");
 
-	set_cursor(10, 20);
-	draw_string("gen: 0");
 
-	set_cursor(10, 400);
-    draw_string("LMB set cell");
 
-	set_cursor(10, 410);
-    draw_string("RMB clear cell");
-
-	set_cursor(10, 420);
-    draw_string("SPACE to start/pause");
-
-	set_cursor(10, 430);
-    draw_string("C to clear map");
-
-	set_cursor(10, 440);
-    draw_string("ESC to exit");
-
-    // wait for a keypress
-    xregn( 0, 0, 0, 1, KEYBOARD_INPUT);
-    RIA.addr0 = KEYBOARD_INPUT;
-    RIA.step0 = 0;
     while (1) {
-
 		HandleMouse();
-
-        // fill the keystates bitmask array
-        for (i = 0; i < KEYBOARD_BYTES; i++) {
-            uint8_t j, new_keys;
-            RIA.addr0 = KEYBOARD_INPUT + i;
-            new_keys = RIA.rw0;
-///*
-            // check for change in any and all keys
-            for (j = 0; j < 8; j++) {
-                uint8_t new_key = (new_keys & (1<<j));
-                if ((((i<<3)+j)>3) && (new_key != (keystates[i] & (1<<j)))) {
-                    printf( "key %d %s\n", ((i<<3)+j), (new_key ? "pressed" : "released"));
-                }
-            }
-//*/
-            keystates[i] = new_keys;
-        }
-
-        // check for a key down
-        if (!(keystates[0] & 1)) {
-            if (!handled_key) { // handle only once per single keypress
-                // handle the keystrokes
-                if (key(KEY_SPACE)) {
-                    break;
-                }
-				if (key(KEY_C)){
-					ClearMap();
-				}
-                handled_key = true;
-            }
-        } else { // no keys down
-            handled_key = false;
-        }
-    }
-
-
-    while (1) {
 
 		if (!paused) {
 			generation++;
@@ -208,12 +204,7 @@ int16_t main()
 			draw_string(msg);
 
 			NextGen();
-			HandleMouse();
-		} else {
-			HandleMouse();
-		}
-
-		
+		} 		
 
         xregn( 0, 0, 0, 1, KEYBOARD_INPUT);
         RIA.addr0 = KEYBOARD_INPUT;
@@ -240,11 +231,26 @@ int16_t main()
         if (!(keystates[0] & 1)) {
             if (!handled_key) { // handle only once per single keypress
                 // handle the keystrokes
+				if (key(KEY_0)){
+					shape_selected = 0;
+					set_cursor(16, 140);
+					fill_rect(BLACK, 16+16*6, 140, 10, 8);
+					sprintf(msg, "shape selected: %i", shape_selected);
+					draw_string(msg);
+				}
 				if (key(KEY_1)) {
-                    mode = 1;
+                    shape_selected = 1;
+					set_cursor(16, 140);
+					fill_rect(BLACK, 16+16*6, 140, 10, 8);
+					sprintf(msg, "shape selected: %i", shape_selected);
+					draw_string(msg);
                 }
 				if (key(KEY_2)){
-					mode = 2;
+					shape_selected = 2;
+					set_cursor(16, 140);
+					fill_rect(BLACK, 16+16*6, 140, 10, 8);
+					sprintf(msg, "shape selected: %i", shape_selected);
+					draw_string(msg);
 				}
 				if (key(KEY_C)){
 					ClearMap();

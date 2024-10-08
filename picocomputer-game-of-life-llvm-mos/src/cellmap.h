@@ -24,7 +24,13 @@ extern uint16_t y_offset;
 
 extern uint16_t x_center, y_center;
 
-void DrawCell(uint16_t color, uint16_t x, uint16_t y, uint8_t mode);
+extern uint8_t shapes[2][16];
+
+void DrawShape(uint8_t shape[16], int startX, int startY);
+
+void DrawMenuShape(uint8_t shape[16], int startX, int startY);
+
+void DrawCell(uint16_t color, uint16_t x, uint16_t y, uint8_t mode, uint16_t x_offset, uint16_t y_offset);
 
 void CellMap();
 
