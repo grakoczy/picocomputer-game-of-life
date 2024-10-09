@@ -94,12 +94,7 @@ static bool LeftBtnPressed(int16_t x, int16_t y)
 // ----------------------------------------------------------------------------
 static bool LeftBtnReleased(int16_t x, int16_t y)
 {
-    // uint16_t r = y/font_height();
-    // uint16_t c = x/font_width();
-    // left_button_pressed = false;
-    // StopMarkingText();
-    // UpdateCursor();
-    // UpdateStatusBarPos();
+    left_button_pressed = false;
     return true;
 }
 
@@ -126,62 +121,6 @@ static bool RightBtnReleased(int16_t x, int16_t y)
 
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
-static void MouseMoved(int16_t x, int16_t y)
-{
-    // panel_t * popup = get_popup();
-    // popup_type_t panel_type = get_popup_type();
-    // uint16_t r = y/font_height();
-    // uint16_t c = x/font_width();
-    // if (popup != NULL) {
-    //     if (panel_type == MSGDIALOG) {
-    //         SetFocusToPanelButton(&((msg_dlg_t*)popup)->panel, r, c);
-    //     } else if (panel_type == FILEDIALOG) {
-    //         file_dlg_t * dlg = (file_dlg_t*)popup;
-    //         if (r == (TheDoc.cur_filename_r) &&
-    //             c >= (TheDoc.cur_filename_c) && c < (TheDoc.cur_filename_c + MAX_FILENAME)) {
-    //             RemoveFocusFromAllPanelButtons(&dlg->panel);
-    //             UpdateTextboxFocus(true);
-    //         } else {
-    //             uint8_t i;
-    //             for (i = 0; i < dlg->panel.num_btns; i++) {
-    //                 button_t * btn = dlg->panel.btn_addr[i];
-    //                 if (btn != NULL) {
-    //                     if (r == btn->r &&
-    //                         c >= btn->c && c < (btn->c + btn->w)    ) {
-    //                         if (!btn->in_focus) {
-    //                             UpdateTextboxFocus(false);
-    //                             RemoveFocusFromAllPanelButtons(&dlg->panel);
-    //                             UpdateButtonFocus(btn, true);
-    //                             break;
-    //                         }
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     } else {
-    //         SetFocusToPanelButton(popup, r, c);
-    //     }
-    // } else if (r == 0) { // main menu
-    //         SetFocusToPanelButton(&TheMainMenu, r, c);
-    // } else if (r < canvas_rows()-1) { // not in status bar either, so must be in txtbox
-    //      // need to find any button with focus and de-focus it
-    //     RemoveFocusFromAllPanelButtons(&TheMainMenu);
-    //     if (left_button_pressed &&
-    //         MarkingText((r - TheTextbox.r) + TheDoc.offset_r,
-    //                     (c - TheTextbox.c))) {
-    //         // move the cursor to the current mouse position
-    //         TheDoc.cursor_r = (r - TheTextbox.r) + TheDoc.offset_r;
-    //         TheDoc.cursor_c = (c - TheTextbox.c);
-    //         UpdateCursor();
-    //         MarkText();
-    //         SetAllTextboxRowsDirty();
-    //         UpdateStatusBarPos();
-    //     }
-    // }
-}
-
-// ----------------------------------------------------------------------------
-// ----------------------------------------------------------------------------
 bool HandleMouse(void)
 {
     static int sx, sy;
@@ -202,8 +141,8 @@ bool HandleMouse(void)
         mx = rw;
         if (sx < 0)
             sx = 0;
-        // if (sx > (CANVAS_WIDTH) - 2) * MOUSE_DIV)
-        //     sx = (CANVAS_HEIGHT - 2) * MOUSE_DIV;
+        if (sx > (CANVAS_WIDTH - 2) * MOUSE_DIV)
+            sx = (CANVAS_WIDTH - 2) * MOUSE_DIV;
     }
 
     // read current y
@@ -216,14 +155,14 @@ bool HandleMouse(void)
         my = rw;
         if (sy < 0)
             sy = 0;
-        // if (sy > (CANVAS_WIDTH) - 2) * MOUSE_DIV)
-        //     sy = (CANVAS_HEIGHT - 2) * MOUSE_DIV;
+        if (sy > (CANVAS_HEIGHT - 2) * MOUSE_DIV)
+            sy = (CANVAS_HEIGHT - 2) * MOUSE_DIV;
     }
 
     // update mouse pointer on screen
     x = sx / MOUSE_DIV;
     y = sy / MOUSE_DIV;
-    x -= (x % 3);
+    x -= (x % 3); //snap mouse every 3 pixels
     y -= (y % 3);
     xram0_struct_set(mouse_struct, vga_mode3_config_t, x_pos_px, x);
     xram0_struct_set(mouse_struct, vga_mode3_config_t, y_pos_px, y);
@@ -254,11 +193,6 @@ bool HandleMouse(void)
         if (released & 2) {
             RightBtnReleased(x, y);
         }
-
-        // // if mouse moved, do something special, maybe
-        // if (xchg || ychg) {
-        //     MouseMoved(x, y);
-        // }
     } else {
         first_time = false;
     }

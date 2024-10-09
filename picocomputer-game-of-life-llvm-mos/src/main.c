@@ -8,7 +8,6 @@
 #include <stdint.h>
 #include <inttypes.h>
 #include <string.h>  // for memset
-// #include "display.h"
 #include "colors.h"
 #include "bitmap_graphics.h"
 #include "usb_hid_keys.h"
@@ -195,12 +194,12 @@ int16_t main()
 
 		if (!paused) {
 			generation++;
-			printf("\ngeneration %i", generation);
+			// printf("\ngeneration %i", generation);
 
-			sprintf(msg, "gen: %i", generation);
-			fill_rect(BLACK, 5, 20, 10*6, 8);
+			sprintf(msg, "%i", generation);
+			fill_rect(BLACK, 46, 20, 5*6, 8);
 			set_text_color(WHITE);
-			set_cursor(5, 20);
+			set_cursor(46, 20);
 			draw_string(msg);
 
 			NextGen();
