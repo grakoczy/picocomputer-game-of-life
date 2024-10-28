@@ -11,6 +11,8 @@
 void InitMouse(void);
 bool HandleMouse(void);
 
+void SetMousePosition(uint16_t x, uint16_t y);
+
 uint16_t mouse_x(void);
 uint16_t mouse_y(void);
 uint8_t mouse_row(void);

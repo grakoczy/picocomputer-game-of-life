@@ -8,8 +8,8 @@
 #include "colors.h"
 #include "display.h"
 #include "cellmap.h"
-
-
+#include "bitmap_graphics.h"
+#include "main.h"
 
 const uint16_t width = cellmap_width;
 const uint16_t height = cellmap_height;
@@ -18,29 +18,56 @@ const uint16_t length_in_bytes = cellmap_width * cellmap_height;
 // draw mode 2 = two pixel wide, 1 = one pixel
 uint8_t mode = 2;
 
-
 // offset for drawing
-uint16_t x_offset = 128+64;
-uint16_t y_offset = 48;
+uint16_t x_offset = 128 + 64 - 10;
+uint16_t y_offset = 48 + 2;
 
 uint16_t x_center, y_center;
 
 uint8_t cells[cellmap_width * cellmap_height];
 uint8_t temp_cells[cellmap_width * cellmap_height];
 
-
-uint8_t shapes[2][16] = 
-    {  {0, 1, 0, 0, //glider
-        0, 0, 1, 0,
-        1, 1, 1, 0,
-        0, 0, 0, 0},
+uint8_t shapes[NUM_SHAPES][16] = 
+    {  
+				{1, 0, 0, 0, // Freehand
+         0, 0, 0, 0,
+         0, 0, 0, 0,
+         0, 0, 0, 0},
+			
+				{0, 1, 0, 0, // Glider
+         0, 0, 1, 0,
+         1, 1, 1, 0,
+         0, 0, 0, 0},
     
-        {1, 0, 1, 1, //B-heptomino
+        {1, 0, 1, 1, // B-heptomino
          1, 1, 1, 0,
          0, 1, 0, 0,
-         0, 0, 0, 0}
+         0, 0, 0, 0},
+
+        {1, 0, 0, 1, // X-wing
+         0, 1, 1, 0,
+         0, 1, 1, 0,
+         1, 0, 0, 1},
+
+        {0, 1, 1, 0, // Wheel
+         1, 1, 1, 1,
+         1, 1, 1, 1,
+         0, 1, 1, 0},
+
+        {0, 1, 1, 0, // Hi-Hat
+         0, 1, 1, 0,
+         0, 1, 1, 0,
+         1, 1, 1, 1},
+
+        {1, 0, 1, 0, // Shoe
+         1, 0, 1, 0,
+         1, 0, 0, 1,
+         1, 1, 1, 0},
+
     };
 
+char * shapes_names[NUM_SHAPES] = {"Freehand Solo","Glider","B-heptomino","X-Wing","Wheel","Hi-Hat","Shoe"};
+uint16_t shapes_coords[NUM_SHAPES][2] = {{5, 20}, {5, 30}, {5, 40}, {5, 50}, {5, 60}, {5, 70},{5, 80}};
 
 void DrawShape(uint8_t shape[16], int startX, int startY)
 {
@@ -53,7 +80,7 @@ void DrawShape(uint8_t shape[16], int startX, int startY)
             if (shape[i * 4 + j] == 1)
             {
                 // Draw at position (startX + j, startY + i)
-                SetCell(startX + j, startY + i);
+									SetCell(startX + j, startY + i);
             }
         }
     }
@@ -71,7 +98,27 @@ void DrawMenuShape(uint8_t shape[16], int startX, int startY)
             {
                 // Draw at position (startX + j, startY + i)
                 DrawCell(WHITE, startX + j, startY + i, 2, 0, 0);
-            }
+						}
+        }
+    }
+}
+
+void DrawMenuShape2(uint8_t shape[16], int startX, int startY)
+{
+    // Iterate through the 16 elements (4x4 grid)
+    for (int i = 0; i < 4; ++i) // Loop over rows
+    {
+        for (int j = 0; j < 4; ++j) // Loop over columns
+        {
+            // Check if the cell should be drawn (1 means filled)
+            if (shape[i * 4 + j] == 1)
+            {
+                // Draw at position (startX + j, startY + i)
+                draw_pixel(WHITE, startX + j * 3 + 0, startY + i * 3 + 0);
+                draw_pixel(WHITE, startX + j * 3 + 1, startY + i * 3 + 0);
+                draw_pixel(WHITE, startX + j * 3 + 0, startY + i * 3 + 1);
+                draw_pixel(WHITE, startX + j * 3 + 1, startY + i * 3 + 1);
+						}
         }
     }
 }
@@ -85,27 +132,33 @@ Refer to this diagram: http://www.jagregory.com/abrash-black-book/images/17-03.j
 */
 
 void DrawCell(uint16_t color, uint16_t x, uint16_t y, uint8_t mode, uint16_t x_offset, uint16_t y_offset) {
-	int16_t startX = x * 3 + x_offset;
-	int16_t startY = y * 3 + y_offset;
 
-	uint8_t shift = 1 * (7 - (startX & 7));
-	RIA.step0 = 0;
-	color = (color != 0) ? 1 : 0;
-	RIA.addr0 = CANVAS_WIDTH/8 * startY + startX/8;
-	RIA.rw0 = (RIA.rw0 & ~(1 << shift)) | ((color & 1) << shift);
-	if (mode == 2) {
-		RIA.addr0 = CANVAS_WIDTH/8 * startY + (startX+1)/8;
-		shift = 1 * (7 - ((startX+1) & 7));
-		RIA.rw0 = (RIA.rw0 & ~(1 << shift)) | ((color & 1) << shift);
+	// WojciechGw
+	if( (x >= 0 && y >= 0 && x < 128 && y < 128)){
 
-		RIA.addr0 = CANVAS_WIDTH/8 * (startY+1) + (startX)/8;
-		shift = 1 * (7 - ((startX) & 7));
-		RIA.rw0 = (RIA.rw0 & ~(1 << shift)) | ((color & 1) << shift);
+		int16_t startX = x * 3 + x_offset;
+		int16_t startY = y * 3 + y_offset;
 
-		RIA.addr0 = CANVAS_WIDTH/8 * (startY+1) + (startX+1)/8;
-		shift = 1 * (7 - ((startX+1) & 7));
+		uint8_t shift = 1 * (7 - (startX & 7));
+		RIA.step0 = 0;
+		color = (color != 0) ? 1 : 0;
+		RIA.addr0 = CANVAS_WIDTH/8 * startY + startX/8;
 		RIA.rw0 = (RIA.rw0 & ~(1 << shift)) | ((color & 1) << shift);
+		if (mode == 2) {
+			RIA.addr0 = CANVAS_WIDTH/8 * startY + (startX+1)/8;
+			shift = 1 * (7 - ((startX+1) & 7));
+			RIA.rw0 = (RIA.rw0 & ~(1 << shift)) | ((color & 1) << shift);
+
+			RIA.addr0 = CANVAS_WIDTH/8 * (startY+1) + (startX)/8;
+			shift = 1 * (7 - ((startX) & 7));
+			RIA.rw0 = (RIA.rw0 & ~(1 << shift)) | ((color & 1) << shift);
+
+			RIA.addr0 = CANVAS_WIDTH/8 * (startY+1) + (startX+1)/8;
+			shift = 1 * (7 - ((startX+1) & 7));
+			RIA.rw0 = (RIA.rw0 & ~(1 << shift)) | ((color & 1) << shift);
+		}
 	}
+
 }
 
 
@@ -117,7 +170,7 @@ void CellMap()
 }
 
 void ClearMap() {
-    
+
     for (uint16_t x = 0; x < width; x++) {
         for (uint16_t y = 0; y < height; y++) {
             // printf("x: %i, y: %i\n", x, y);
@@ -125,6 +178,7 @@ void ClearMap() {
         }
     }
     memset(cells, 0, length_in_bytes);
+
 }
 
 
@@ -153,8 +207,6 @@ void SetCell(uint16_t x, uint16_t y)
 	*(cell_ptr + yobelow) += 0x02;
 	*(cell_ptr + yobelow + xoright) += 0x02;
 
-    // setPixel(x+x_offset, y+y_offset, true);
-    // draw_pixel(WHITE, x+x_offset, y+y_offset);
 	DrawCell(WHITE, x, y, mode, x_offset, y_offset);
 }
 
@@ -184,8 +236,6 @@ void ClearCell(uint16_t x, uint16_t y)
 	*(cell_ptr + yobelow) -= 0x02;
 	*(cell_ptr + yobelow + xoright) -= 0x02;
 
-    // setPixel(x+x_offset, y+y_offset, false);
-    // draw_pixel(BLACK, x+x_offset, y+y_offset);
 	DrawCell(BLACK, x, y, mode, x_offset, y_offset);
 }
 

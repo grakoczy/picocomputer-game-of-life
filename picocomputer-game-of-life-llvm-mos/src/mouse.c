@@ -7,11 +7,12 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stdio.h>
-#include "mouse.h"
 #include "display.h"
+#include "main.h"
 #include "cellmap.h"
+#include "mouse.h"
 
-#define MOUSE_DIV 2 // Mouse speed divider
+#define MOUSE_DIV 2
 
 static uint16_t mouse_struct = 0xFF50;
 static uint16_t mouse_data = 0xFE60; // to 0xFEC3, since 100 bytes are needed for mouse pointer data
@@ -28,17 +29,18 @@ static void DrawMousePointer(void)
 {
     int i;
     static const uint8_t data[100] = {
-        16, 16, 16, 16, 16, 16, 16,  0,  0,  0,
-        16,70,70,70,70,70, 16,  0,  0,  0,
-        16,70,70,70,70, 16,  0,  0,  0,  0,
-        16,70,70,70,70, 16,  0,  0,  0,  0,
-        16,70,70,70,70,70, 16,  0,  0,  0,
-        16,70, 16, 16,70,70,70,  0,  0,  0,
-        16, 16,  0,  0, 16,70,70,  0,  0,  0,
-         0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-         0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-         0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+        16, 16, 16, 16, 16, 16, 16, 16,  0,  0,
+        16, 70, 70, 70, 70, 70, 16,  0,  0,  0,
+        16, 70, 70, 70, 70, 16,  0,  0,  0,  0,
+        16, 70, 70, 70, 70, 16,  0,  0,  0,  0,
+        16, 70, 70, 70, 70, 70, 16,  0,  0,  0,
+        16, 70, 16, 16, 70, 70, 70, 16,  0,  0,
+        16, 16,  0,  0, 16, 70, 70, 70, 16,  0,
+        16,  0,  0,  0,  0, 16, 70, 70, 70, 16,
+         0,  0,  0,  0,  0,  0, 16, 70, 16,  0,
+         0,  0,  0,  0,  0,  0,  0, 16,  0,  0,
     };
+
     RIA.addr0 = mouse_data;
     RIA.step0 = 1;
     for (i = 0; i < 100; i++) {
@@ -57,7 +59,7 @@ void InitMouse(void)
     xram0_struct_set(mouse_struct, vga_mode3_config_t, height_px, 10);
     xram0_struct_set(mouse_struct, vga_mode3_config_t, xram_data_ptr, mouse_data);
     xram0_struct_set(mouse_struct, vga_mode3_config_t, xram_palette_ptr, 0xFFFF);
-    xregn( 1, 0, 1, 4, 3, 3, mouse_struct, 2); // mode3 (bitmap), 8-bit color, plane2
+    xregn( 1, 0, 1, 4, 3, 3, mouse_struct, 1); // mode3 (bitmap), 8-bit color, plane2
     xregn( 0, 0, 1, 1, mouse_state);
     DrawMousePointer();
 }
@@ -70,23 +72,31 @@ static bool LeftBtnPressed(int16_t x, int16_t y)
     bool retval = false;
     uint8_t cell_x, cell_y = 0;
 
-
-    if(x >= x_offset && y >= y_offset ){
+    if(   x >= x_offset 
+       && y >= y_offset 
+       && x < 575 && y < 432){
         cell_x = (x - x_offset) / 3;
         cell_y = (y - y_offset) / 3;
         if (shape_selected == 0) {
             SetCell(cell_x, cell_y);
-        } else if (shape_selected == 1)
-        {
-            DrawShape(shapes[0], cell_x, cell_y);
-        } else if (shape_selected == 2)
-        {
-            DrawShape(shapes[1], cell_x, cell_y);
+        } else {
+            DrawShape(shapes[shape_selected], cell_x, cell_y);
         }
-        
         
     }
 
+    // select predefined shape with mouse pointer
+    if(gamestate == GAMESTATE_CREATING){
+        for(int s = 0; s < NUM_SHAPES; s++){
+            if( x >= shapes_coords[s][0] && x < (shapes_coords[s][0] + 16)
+                && 
+                y >= shapes_coords[s][1] && y < (shapes_coords[s][1] + 16)){
+                    shape_selected = s;
+                    shape_changed = true;
+            }
+        }
+    }    
+        
     return retval;
 }
 
@@ -104,7 +114,7 @@ static bool RightBtnPressed(int16_t x, int16_t y)
 {
     uint8_t cell_x, cell_y = 0;
 
-    if(x >= x_offset && y >= y_offset ){
+    if(x >= x_offset && y >= y_offset && x < 575 && y < 432){
         cell_x = (x - x_offset) / 3;
         cell_y = (y - y_offset) / 3;
         ClearCell(cell_x, cell_y);        
@@ -115,6 +125,22 @@ static bool RightBtnPressed(int16_t x, int16_t y)
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
 static bool RightBtnReleased(int16_t x, int16_t y)
+{
+    return true;
+}
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+static bool MiddleBtnPressed(int16_t x, int16_t y)
+{
+    gamestate = ((gamestate == GAMESTATE_CREATING) ? GAMESTATE_RUNNING : GAMESTATE_CREATING);
+	gamestate_changed = true;
+	shape_changed = true;
+    return true;
+}
+
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+static bool MiddleBtnReleased(int16_t x, int16_t y)
 {
     return true;
 }
@@ -192,6 +218,12 @@ bool HandleMouse(void)
         }
         if (released & 2) {
             RightBtnReleased(x, y);
+        }
+        if (pressed & 4) {
+            MiddleBtnPressed(x, y);
+        }
+        if (released & 4) {
+            MiddleBtnReleased(x, y);
         }
     } else {
         first_time = false;
